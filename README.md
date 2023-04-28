@@ -1,21 +1,48 @@
-# LoRA Dualnetworks Train
+<div align="center">
+
+
+# LoRA Dualnetworks
+**Style Fusion Through Dual Path Low Rank Adaptation**
+
+
+______________________________________________________________________
+
+<p align="center">
+  <a href="">Arxiv</a> •
+  <a href="#dependency">Dependency</a> •
+<a href="#training">Training</a> •
+<a href="#demo">Testing</a> •
+  <a href="#pre-trained-models-and-results">Logs</a> •
+  <a href="#citation">Citation</a><br>
+ </p>
+
+[![python](https://img.shields.io/badge/python-%20%203.9-blue.svg)]()
+[![license](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/duanyiqun/DiffusionDepth/blob/main/LICENSE)
+
+
+
+</div>
+
+Taking inspiration from the hierarchical control of LoRA using [lora-block-weight](https://raw.githubusercontent.com/hako-mikan/sd-webui-lora-block-weight/), we developed this script. In the SD LoRA model, feature fusion and collapse can occur when multiple LoRA models are stacked, greatly limiting the use cases of the LoRA model. To mitigate this problem, we propose a new LoRA training method that involves simultaneously training two LoRA models. This allows the two LoRA models to mutually constrain each other during training, thus separating the features of the two LoRA models in high-dimensional space and reducing the coupling of features.
+
+______________________________________________________________________
+
+
+## Features 
 - Training script for the LoRA model based on Stable Diffusion v1.5
 - Training the LoRA model using dual networks
 - Base on kohya's [sd-scripts](https://github.com/kohya-ss/sd-scripts)
 
-## Intro
-Taking inspiration from the hierarchical control of LoRA using [lora-block-weight](https://raw.githubusercontent.com/hako-mikan/sd-webui-lora-block-weight/), we developed this script. In the SD LoRA model, feature fusion and collapse can occur when multiple LoRA models are stacked, greatly limiting the use cases of the LoRA model. To mitigate this problem, we propose a new LoRA training method that involves simultaneously training two LoRA models. This allows the two LoRA models to mutually constrain each other during training, thus separating the features of the two LoRA models in high-dimensional space and reducing the coupling of features.
 
 ## Dependency
 Same as [sd-scripts](https://github.com/kohya-ss/sd-scripts)
 These files do not contain requirements for PyTorch. Because the versions of them depend on your environment. Please install PyTorch at first (see installation guide below.)
 The scripts are tested with PyTorch 1.12.1 and 1.13.0, Diffusers 0.10.2.
 
-## Method
+## Method Brief
 We added a new orthogonal loss to the original DDPM loss, as shown in the following formula
-$$
-L = (\epsilon - \epsilon_\theta)^2 + \lambda (h_1h_2^T\bigodot(1-I))^2
-$$
+$$L = (\epsilon - \epsilon_\theta)^2 + \lambda (h_1h_2^T\bigodot(1-I))^2$$
+
 Here, h refers to the hidden layer of two independent LoRA networks that correspond to each other.
 ![](/img/dualnetwork.jpg)
 It is recommended to pretrain network1 and then freeze it before training network2. This can alleviate the feature fusion between the LoRA models during training.
@@ -54,6 +81,8 @@ accelerate launch --num_cpu_threads_per_process 1 train_dualnetwork.py
 ```
 
 ## Demo
-![](/img/nihada_base.png)
-![](/img/nihida_hanfu.png)
+<div align="center">
+<img src="img/nihada_base.png" width = "400" height =  alt="图片名称" align=center />
+<img src="img/nihida_hanfu.png" width = "400" height =  alt="图片名称" align=center />
+</div>
 Can easily transform the clothes of nahida into hanfu.
