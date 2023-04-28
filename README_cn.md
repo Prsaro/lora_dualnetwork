@@ -12,10 +12,18 @@ These files do not contain requirements for PyTorch. Because the versions of the
 The scripts are tested with PyTorch 1.12.1 and 1.13.0, Diffusers 0.10.2.
 
 ## 项目原理
+在原始DDPM的loss上添加了新的正交损失，如下面的公式所示
+$$
+L = (\epsilon - \epsilon_\theta)^2 + \lambda (h_1h_2^T\bigodot(1-I))^2
+$$
+其中h为两个独立LoRA网络相互对应的隐藏层。
+![](/img/dualnetwork.jpg)
+在训练的时候推荐预训练好network1，冻结network1后再训练network2，这样可以缓解LoRA模型之间的特征融合。
+
 
 ## 网络训练
 参数配置与[sd-scripts](https://github.com/kohya-ss/sd-scripts)一致
-目前只支持使用Dreambooth的训练方式，暂时不支持finetune的in-json方式训练
+目前只支持使用Dreambooth的训练方式，暂时不支持finetune的in-json方式训练,也不支持.toml加载数据集。
 ```
 accelerate launch --num_cpu_threads_per_process 1 train_dualnetwork.py
     --pretrained_model_name_or_path=<network1的基础模型.ckpt, .safetensor或者Diffusers支持的模型>

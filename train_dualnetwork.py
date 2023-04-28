@@ -491,13 +491,12 @@ def train(args):
 
 
   if not cache_latents:
-    # 原则上vae可以共用
     vae_1.requires_grad_(False)
     vae_1.eval()
     vae_1.to(accelerator_1.device, dtype=weight_dtype)
-    # vae_2.requires_grad_(False)
-    # vae_2.eval()
-    # vae_2.to(accelerator_2.device, dtype=weight_dtype)
+    vae_2.requires_grad_(False)
+    vae_2.eval()
+    vae_2.to(accelerator_2.device, dtype=weight_dtype)
 
   # 実験的機能：勾配も含めたfp16学習を行う　PyTorchにパッチを当ててfp16でのgrad scaleを有効にする
   if args.full_fp16:
@@ -808,7 +807,7 @@ def train(args):
   for key in minimum_keys:
       if key in metadata_1:
           minimum_metadata[key] = metadata_1[key]
-  # 只弄一个进度条就够了，两个有点多
+
   progress_bar = tqdm(range(args.max_train_steps), smoothing=0, disable=not accelerator_1.is_local_main_process, desc="steps")
   global_step = 0
 
@@ -854,7 +853,6 @@ def train(args):
     kld_txt = 0
     kld_unet_mid = 0
     epoch_length = max(len(train_dataloader_1), len(train_dataloader_2))
-    # for step, batch in enumerate(cycle(train_dataloader_1, train_dataloader_2)):
     for step, batch in enumerate(zip(cycle(train_dataloader_1), cycle(train_dataloader_2))):
       # Terminate the infinite loop
       if step == epoch_length:
