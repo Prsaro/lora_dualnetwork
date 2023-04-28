@@ -29,7 +29,7 @@ accelerate launch --num_cpu_threads_per_process 1 train_dualnetwork.py
     --pretrained_model_name_or_path=<network1的基础模型.ckpt, .safetensor或者Diffusers支持的模型>
     --pretrained_model_name_or_path=<network2的基础模型.ckpt, .safetensor或者Diffusers支持的模型>
     --output_dir=<模型训练的输出路径>  
-    --output_name=<模型训练的输出名字> 
+    --output_name=<模型训练的输出名字>
     --save_model_as=safetensors
     --prior_loss_weight=1.0 
     --max_train_steps=2000
