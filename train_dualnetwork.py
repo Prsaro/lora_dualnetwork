@@ -189,7 +189,8 @@ def train(args):
   train_util.prepare_dataset_args(args, True)
 
   cache_latents = args.cache_latents
-  use_dreambooth_method = args.in_json is None
+  use_dreambooth_method_1 = args.in_json is None
+  use_dreambooth_method_2 = args.in_json_2 is None
   use_user_config = args.dataset_config is not None
 
   if args.seed is not None:
@@ -214,8 +215,8 @@ def train(args):
             )
         )
   else:
-      if use_dreambooth_method:
-          print("Use DreamBooth method.")
+      if use_dreambooth_method_1:
+          print("network1: Use DreamBooth method.")
           user_config_1 = {
               "datasets": [
                   {"subsets": config_util.generate_dreambooth_subsets_config_by_subdirs(args.train_data_dir, args.reg_data_dir)}
@@ -227,14 +228,35 @@ def train(args):
               ]
           }
       else:
-          print("Train with captions.")
-          user_config = {
+          print("network1: Train with captions.")
+          user_config_1 = {
               "datasets": [
                   {
                       "subsets": [
                           {
                               "image_dir": args.train_data_dir,
                               "metadata_file": args.in_json,
+                          }
+                      ]
+                  }
+              ]
+          }
+      if use_dreambooth_method_2:
+          print("network2: Use DreamBooth method.")
+          user_config_2 = {
+            "datasets": [
+                  {"subsets": config_util.generate_dreambooth_subsets_config_by_subdirs(args.train_data_dir_2, args.reg_data_dir_2)}
+              ]
+          }
+      else:
+          print("network2: Train with captions.")
+          user_config_2 = {
+              "datasets": [
+                  {
+                      "subsets": [
+                          {
+                              "image_dir": args.train_data_dir_2,
+                              "metadata_file": args.in_json_2,
                           }
                       ]
                   }
@@ -306,14 +328,14 @@ def train(args):
     vae_1.to("cpu")
     if torch.cuda.is_available():
       torch.cuda.empty_cache()
-    vae_2.to(accelerator_1.device, dtype=weight_dtype)
-    vae_2.requires_grad_(False)
-    vae_2.eval()
-    with torch.no_grad():
-      train_dataset_group_2.cache_latents(vae_2)
-    vae_2.to("cpu")
-    if torch.cuda.is_available():
-      torch.cuda.empty_cache()
+    # vae_2.to(accelerator_1.device, dtype=weight_dtype)
+    # vae_2.requires_grad_(False)
+    # vae_2.eval()
+    # with torch.no_grad():
+    #   train_dataset_group_2.cache_latents(vae_2)
+    # vae_2.to("cpu")
+    # if torch.cuda.is_available():
+    #   torch.cuda.empty_cache()
     gc.collect()
 
   # prepare network
@@ -491,12 +513,13 @@ def train(args):
 
 
   if not cache_latents:
+    # 原则上vae可以共用
     vae_1.requires_grad_(False)
     vae_1.eval()
     vae_1.to(accelerator_1.device, dtype=weight_dtype)
-    vae_2.requires_grad_(False)
-    vae_2.eval()
-    vae_2.to(accelerator_2.device, dtype=weight_dtype)
+    # vae_2.requires_grad_(False)
+    # vae_2.eval()
+    # vae_2.to(accelerator_2.device, dtype=weight_dtype)
 
   # 実験的機能：勾配も含めたfp16学習を行う　PyTorchにパッチを当ててfp16でのgrad scaleを有効にする
   if args.full_fp16:
@@ -616,13 +639,16 @@ def train(args):
       # save metadata of multiple datasets
       # NOTE: pack "ss_datasets" value as json one time
       #   or should also pack nested collections as json?
-      datasets_metadata = []
-      tag_frequency = {}  # merge tag frequency for metadata editor
-      dataset_dirs_info = {}  # merge subset dirs for metadata editor
+      datasets_metadata_1 = []
+      tag_frequency_1 = {}  # merge tag frequency for metadata editor
+      dataset_dirs_info_1 = {}  # merge subset dirs for metadata editor
+      datasets_metadata_2 = []
+      tag_frequency_2 = {}  # merge tag frequency for metadata editor
+      dataset_dirs_info_2 = {}
 
-      for dataset in train_dataset_group.datasets:
+      for dataset in train_dataset_group_1.datasets:
           is_dreambooth_dataset = isinstance(dataset, DreamBoothDataset)
-          dataset_metadata = {
+          dataset_metadata_1 = {
               "is_dreambooth": is_dreambooth_dataset,
               "batch_size_per_device": dataset.batch_size,
               "num_train_images": dataset.num_train_images,  # includes repeating
@@ -671,28 +697,100 @@ def train(args):
                   # datasets may have a certain dir multiple times
                   v = image_dir_or_metadata_file
                   i = 2
-                  while v in dataset_dirs_info:
+                  while v in dataset_dirs_info_1:
                       v = image_dir_or_metadata_file + f" ({i})"
                       i += 1
                   image_dir_or_metadata_file = v
 
-                  dataset_dirs_info[image_dir_or_metadata_file] = {"n_repeats": subset.num_repeats, "img_count": subset.img_count}
+                  dataset_dirs_info_1[image_dir_or_metadata_file] = {"n_repeats": subset.num_repeats, "img_count": subset.img_count}
 
-          dataset_metadata["subsets"] = subsets_metadata
-          datasets_metadata.append(dataset_metadata)
+          dataset_metadata_1["subsets"] = subsets_metadata
+          datasets_metadata_1.append(dataset_metadata_1)
 
           # merge tag frequency:
           for ds_dir_name, ds_freq_for_dir in dataset.tag_frequency.items():
               # あるディレクトリが複数のdatasetで使用されている場合、一度だけ数える
               # もともと繰り返し回数を指定しているので、キャプション内でのタグの出現回数と、それが学習で何度使われるかは一致しない
               # なので、ここで複数datasetの回数を合算してもあまり意味はない
-              if ds_dir_name in tag_frequency:
+              if ds_dir_name in tag_frequency_1:
                   continue
-              tag_frequency[ds_dir_name] = ds_freq_for_dir
+              tag_frequency_1[ds_dir_name] = ds_freq_for_dir
 
-      metadata["ss_datasets"] = json.dumps(datasets_metadata)
-      metadata["ss_tag_frequency"] = json.dumps(tag_frequency)
-      metadata["ss_dataset_dirs"] = json.dumps(dataset_dirs_info)
+      metadata_1["ss_datasets"] = json.dumps(datasets_metadata_1)
+      metadata_1["ss_tag_frequency"] = json.dumps(tag_frequency_1)
+      metadata_1["ss_dataset_dirs"] = json.dumps(dataset_dirs_info_1)
+      for dataset in train_dataset_group_2.datasets:
+          is_dreambooth_dataset = isinstance(dataset, DreamBoothDataset)
+          dataset_metadata_2 = {
+            "is_dreambooth": is_dreambooth_dataset,
+            "batch_size_per_device": dataset.batch_size,
+            "num_train_images": dataset.num_train_images,  # includes repeating
+            "num_reg_images": dataset.num_reg_images,
+            "resolution": (dataset.width, dataset.height),
+            "enable_bucket": bool(dataset.enable_bucket),
+            "min_bucket_reso": dataset.min_bucket_reso,
+            "max_bucket_reso": dataset.max_bucket_reso,
+            "tag_frequency": dataset.tag_frequency,
+            "bucket_info": dataset.bucket_info,
+          }
+          subsets_metadata = []
+          for subset in dataset.subsets:
+            subset_metadata = {
+                  "img_count": subset.img_count,
+                  "num_repeats": subset.num_repeats,
+                  "color_aug": bool(subset.color_aug),
+                  "flip_aug": bool(subset.flip_aug),
+                  "random_crop": bool(subset.random_crop),
+                  "shuffle_caption": bool(subset.shuffle_caption),
+                  "keep_tokens": subset.keep_tokens,
+              }
+
+            image_dir_or_metadata_file = None
+            if subset.image_dir:
+                image_dir = os.path.basename(subset.image_dir)
+                subset_metadata["image_dir"] = image_dir
+                image_dir_or_metadata_file = image_dir
+
+            if is_dreambooth_dataset:
+                subset_metadata["class_tokens"] = subset.class_tokens
+                subset_metadata["is_reg"] = subset.is_reg
+                if subset.is_reg:
+                    image_dir_or_metadata_file = None  # not merging reg dataset
+            else:
+              metadata_file = os.path.basename(subset.metadata_file)
+              subset_metadata["metadata_file"] = metadata_file
+              image_dir_or_metadata_file = metadata_file  # may overwrite
+
+            subsets_metadata.append(subset_metadata)
+
+
+            # merge dataset dir: not reg subset only
+            # TODO update additional-network extension to show detailed dataset config from metadata
+            if image_dir_or_metadata_file is not None:
+                # datasets may have a certain dir multiple times
+                v = image_dir_or_metadata_file
+                i = 2
+                while v in dataset_dirs_info_2:
+                    v = image_dir_or_metadata_file + f" ({i})"
+                    i += 1
+                image_dir_or_metadata_file = v
+
+                dataset_dirs_info_2[image_dir_or_metadata_file] = {"n_repeats": subset.num_repeats, "img_count": subset.img_count}
+          dataset_metadata_2["subsets"] = subsets_metadata
+          datasets_metadata_2.append(dataset_metadata_2)
+
+          # merge tag frequency:
+          for ds_dir_name, ds_freq_for_dir in dataset.tag_frequency.items():
+              # あるディレクトリが複数のdatasetで使用されている場合、一度だけ数える
+              # もともと繰り返し回数を指定しているので、キャプション内でのタグの出現回数と、それが学習で何度使われるかは一致しない
+              # なので、ここで複数datasetの回数を合算してもあまり意味はない
+              if ds_dir_name in tag_frequency_2:
+                  continue
+              tag_frequency_2[ds_dir_name] = ds_freq_for_dir
+      metadata_2["ss_datasets"] = json.dumps(datasets_metadata_2)
+      metadata_2["ss_tag_frequency"] = json.dumps(tag_frequency_2)
+      metadata_2["ss_dataset_dirs"] = json.dumps(dataset_dirs_info_2)
+
   else:
       # conserving backward compatibility when using train_dataset_dir and reg_dataset_dir
       assert (
@@ -702,17 +800,13 @@ def train(args):
       dataset_1 = train_dataset_group_1.datasets[0]
       dataset_2 = train_dataset_group_2.datasets[0]
 
-
       dataset_dirs_info_1 = {}
       reg_dataset_dirs_info_1 = {}
       dataset_dirs_info_2 = {}
       reg_dataset_dirs_info_2 = {}
-      if use_dreambooth_method:
+      if use_dreambooth_method_1:
           for subset in dataset_1.subsets:
               info = reg_dataset_dirs_info_1 if subset.is_reg else dataset_dirs_info_1
-              info[os.path.basename(subset.image_dir)] = {"n_repeats": subset.num_repeats, "img_count": subset.img_count}
-          for subset in dataset_2.subsets:
-              info = reg_dataset_dirs_info_2 if subset.is_reg else dataset_dirs_info_2
               info[os.path.basename(subset.image_dir)] = {"n_repeats": subset.num_repeats, "img_count": subset.img_count}
       else:
           for subset in dataset_1.subsets:
@@ -720,6 +814,11 @@ def train(args):
                   "n_repeats": subset.num_repeats,
                   "img_count": subset.img_count,
               }
+      if use_dreambooth_method_2:
+          for subset in dataset_2.subsets:
+              info = reg_dataset_dirs_info_2 if subset.is_reg else dataset_dirs_info_2
+              info[os.path.basename(subset.image_dir)] = {"n_repeats": subset.num_repeats, "img_count": subset.img_count}
+      else:
           for subset in dataset_2.subsets:
               dataset_dirs_info_2[os.path.basename(subset.metadata_file)] = {
                   "n_repeats": subset.num_repeats,
@@ -807,7 +906,6 @@ def train(args):
   for key in minimum_keys:
       if key in metadata_1:
           minimum_metadata[key] = metadata_1[key]
-
   progress_bar = tqdm(range(args.max_train_steps), smoothing=0, disable=not accelerator_1.is_local_main_process, desc="steps")
   global_step = 0
 
@@ -1204,6 +1302,9 @@ def setup_parser() -> argparse.ArgumentParser:
     parser.add_argument(
       "--half_annel_epoch", type=int, default=0, help="在该轮次开始后，固定network1网络，但是network2的loss需要加上正则项进行训练 / \
         After this epoch, keep network1 freezed and add a regularization term to the loss of network2 during training."
+    )
+    parser.add_argument(
+      "--in_json_2", type=str, default=None, help="json metadata for dataset of network2"
     )
     return parser
 
