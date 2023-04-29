@@ -49,7 +49,7 @@ It is recommended to pretrain network1 and then freeze it before training networ
 
 ## Train
 Parameter configuration is same as [sd-scripts](https://github.com/kohya-ss/sd-scripts).
-Currently, only training with Dreambooth is supported. Fine-tuning using in-json training mode and loading datasets with .toml format are not supported.
+Currently, only training with Dreambooth is supported. Fine-tuning using in-json training mode and loading datasets with .toml format are not tested.
 ```
 accelerate launch --num_cpu_threads_per_process 1 train_dualnetwork.py
     --pretrained_model_name_or_path=<base model of network1 in .ckpt, .safetensor, or models supported by Diffusers>

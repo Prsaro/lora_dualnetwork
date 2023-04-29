@@ -23,7 +23,7 @@ $$
 
 ## 网络训练
 参数配置与[sd-scripts](https://github.com/kohya-ss/sd-scripts)一致
-目前只支持使用Dreambooth的训练方式，暂时不支持finetune的in-json方式训练,也不支持.toml加载数据集。
+目前只支持使用Dreambooth的训练方式，finetune的in-json方式训练,和.toml加载数据集的训练方式都没有测试。
 ```
 accelerate launch --num_cpu_threads_per_process 1 train_dualnetwork.py
     --pretrained_model_name_or_path=<network1的基础模型.ckpt, .safetensor或者Diffusers支持的模型>

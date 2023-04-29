@@ -328,14 +328,14 @@ def train(args):
     vae_1.to("cpu")
     if torch.cuda.is_available():
       torch.cuda.empty_cache()
-    # vae_2.to(accelerator_1.device, dtype=weight_dtype)
-    # vae_2.requires_grad_(False)
-    # vae_2.eval()
-    # with torch.no_grad():
-    #   train_dataset_group_2.cache_latents(vae_2)
-    # vae_2.to("cpu")
-    # if torch.cuda.is_available():
-    #   torch.cuda.empty_cache()
+    vae_2.to(accelerator_1.device, dtype=weight_dtype)
+    vae_2.requires_grad_(False)
+    vae_2.eval()
+    with torch.no_grad():
+      train_dataset_group_2.cache_latents(vae_2)
+    vae_2.to("cpu")
+    if torch.cuda.is_available():
+      torch.cuda.empty_cache()
     gc.collect()
 
   # prepare network
@@ -517,9 +517,9 @@ def train(args):
     vae_1.requires_grad_(False)
     vae_1.eval()
     vae_1.to(accelerator_1.device, dtype=weight_dtype)
-    # vae_2.requires_grad_(False)
-    # vae_2.eval()
-    # vae_2.to(accelerator_2.device, dtype=weight_dtype)
+    vae_2.requires_grad_(False)
+    vae_2.eval()
+    vae_2.to(accelerator_2.device, dtype=weight_dtype)
 
   # 実験的機能：勾配も含めたfp16学習を行う　PyTorchにパッチを当ててfp16でのgrad scaleを有効にする
   if args.full_fp16:
@@ -968,7 +968,7 @@ def train(args):
               latents_2 = batch[1]["latents"].to(accelerator_2.device)
             else:
               # latentに変換
-              latents_2 = vae_1.encode(batch[1]["images"].to(dtype=weight_dtype)).latent_dist.sample()
+              latents_2 = vae_2.encode(batch[1]["images"].to(dtype=weight_dtype)).latent_dist.sample()
             latents_2 = latents_2 * 0.18215
           b_size = latents_1.shape[0]
 
