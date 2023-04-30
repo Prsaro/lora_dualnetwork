@@ -44,7 +44,10 @@ We added a new orthogonal loss to the original DDPM loss, as shown in the follow
 $$L = (\epsilon - \epsilon_\theta)^2 + \lambda (h_1h_2^T\bigodot(1-I))^2$$
 
 Here, h refers to the hidden layer of two independent LoRA networks that correspond to each other.
+![](/img/dualnetwork_theory.jpg)
+We select the hidden layers from the output of text encoder and the mid-layer of Unet as our chosen hidden layers h. The influence of the mid-layer of Unet is more significant in this case.
 ![](/img/dualnetwork.jpg)
+
 It is recommended to pretrain network1 and then freeze it before training network2. This can alleviate the feature fusion between the LoRA models during training.
 
 ## Train
@@ -80,11 +83,17 @@ accelerate launch --num_cpu_threads_per_process 1 train_dualnetwork.py
     --half_annel_epoch=0
 ```
 
-## Demo
+## 
+Used the same prompt and fixed the seed, with the only difference being the addition of Hanfu lora model or not.
+
 <div align="center">
-<img src="img/nihada_base.png" width = "400" height =  alt="图片名称" align=center />
-<img src="img/nihida_hanfu.png" width = "400" height =  alt="图片名称" align=center />
+<img src="img/nihada_base.png" width = "200" height =  alt="图片名称" align=center/><img src="img/nihida_hanfu.png" width = "200" height =  alt="图片名称" align=center/>
 </div>
 Can easily transform the clothes of nahida into hanfu.
+<div align="center">
+<img src="img/sangyan_base.jpeg" width = "200" height =  alt="图片名称" align=center/><img src="img/sangyan_hanfu.png" width = "200" height =  alt="图片名称" align=center/>
+</div>
+
+Changed the character's clothing without affecting their appearance and movements.
 
 @ kkworld
