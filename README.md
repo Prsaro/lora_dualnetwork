@@ -86,3 +86,5 @@ accelerate launch --num_cpu_threads_per_process 1 train_dualnetwork.py
 <img src="img/nihida_hanfu.png" width = "400" height =  alt="图片名称" align=center />
 </div>
 Can easily transform the clothes of nahida into hanfu.
+
+@ kkworld

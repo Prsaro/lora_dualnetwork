@@ -30,41 +30,6 @@ from library.config_util import (
 import library.custom_train_functions as custom_train_functions
 from library.custom_train_functions import apply_snr_weight
 
-"""
-temp config place
-"""
-train_data_dir_2 = "/home/chenkaizheng/data/diffusion_data/dreambooth_3/lora_data/with_tag/nohead_jiaocha_newnew" 
-reg_data_dir_2 = ""
-logging_dir_2 = "log_locon2"
-log_prefix_2 = ""
-kld_weight_value = 0 # kl散度的系数
-orth_te_weight = 1 # 正交loss的系数
-orth_unet_weight = 1
-model_path_2 = "/home/chenkaizheng/codes/vscode/waifu/webui_new/stable-diffusion-webui/models/Stable-diffusion/v1-5-pruned-emaonly.ckpt"
-network_dim = 128
-network_alpha = 128
-# 暂时不支持locon / currently not supported locon yet
-network_module = "networks.lora"
-# 是否固定网络1
-freeze_network_1= False
-# 半固定指的是前半部分只训练衣服lora，后半部分两个lora一起微调
-semi_freeze_network_1 = True
-# 基准的人物lora的路径
-pretrained_lora_path = "/home/chenkaizheng/codes/vscode/waifu/webui_new/stable-diffusion-webui/extensions/sd-webui-additional-networks/models/lora/yetAnotherNahidaGenshin_nahidav3.safetensors"
-# pretrained_lora_path_2 = "/home/chenkaizheng/codes/vscode/waifu/webui_new/stable-diffusion-webui/extensions/sd-webui-additional-networks/models/lora/joint_lora_fixn1_sep_5e3-000012_2.safetensors"
-# pretrained_lora_path = ""
-pretrained_lora_path_2 = ""
-
-# # 如果存在预训练路径2，并且lora1没有半固定
-# if pretrained_lora_path_2 is not None and not semi_freeze_network_1:
-#   ANNEAL_EPOCH = 0
-#   HALF_ANNEAL_EPOCH = 0
-# # 如果从头开训或者network1半固定
-# else:
-#   ANNEAL_EPOCH = 20 # 20轮前进行正常训练
-#   HALF_ANNEAL_EPOCH = 11 #超过这个轮次后，对network_2添加正交损失
-#   print("第{}轮开始全退火".format(ANNEAL_EPOCH))
-
 
 def collate_fn(examples):
   return examples[0]
@@ -1145,10 +1110,6 @@ def train(args):
         }
       accelerator_1.log(logs, step=epoch+1)
       accelerator_2.log(logs, step=epoch+1)
-      # for name, param in network.named_parameters():
-        # locon_writer.add_histogram(tag=name+'_grad', values=param.grad, global_step=epoch+1)
-        # locon_writer.add_histogram(tag=name+'_data', values=param.data, global_step=epoch+1)
-      
 
     accelerator_1.wait_for_everyone()
     accelerator_2.wait_for_everyone()
@@ -1237,16 +1198,16 @@ def setup_parser() -> argparse.ArgumentParser:
     parser.add_argument("--unet_lr", type=float, default=None, help="learning rate for U-Net / U-Netの学習率")
     parser.add_argument("--text_encoder_lr", type=float, default=None, help="learning rate for Text Encoder / Text Encoderの学習率")
 
-    parser.add_argument("--network_weights", type=str, default=pretrained_lora_path, help="pretrained weights for network / 学習するネットワークの初期重み")
-    parser.add_argument("--network_weights_2", type=str, default=pretrained_lora_path_2, help="pretrained weights for network2 / 学習するネットワークの初期重み")
-    parser.add_argument("--network_module", type=str, default=network_module, help="network module to train / 学習対象のネットワークのモジュール")
+    parser.add_argument("--network_weights", type=str, default=None, help="pretrained weights for network / 学習するネットワークの初期重み")
+    parser.add_argument("--network_weights_2", type=str, default=None, help="pretrained weights for network2 / 学習するネットワークの初期重み")
+    parser.add_argument("--network_module", type=str, default="network.lora", help="network module to train / 学習対象のネットワークのモジュール")
     parser.add_argument(
-        "--network_dim", type=int, default=network_dim, help="network dimensions (depends on each network) / モジュールの次元数（ネットワークにより定義は異なります）"
+        "--network_dim", type=int, default=64, help="network dimensions (depends on each network) / モジュールの次元数（ネットワークにより定義は異なります）"
     )
     parser.add_argument(
         "--network_alpha",
         type=float,
-        default=network_alpha,
+        default=64,
         help="alpha for LoRA weight scaling, default 1 (same as network_dim for same behavior as old version) / LoRaの重み調整のalpha値、デフォルト1（旧バージョンと同じ動作をするにはnetwork_dimと同じ値を指定）",
     )
     parser.add_argument(
@@ -1266,16 +1227,16 @@ def setup_parser() -> argparse.ArgumentParser:
       "--log_prefix_2", type=str, default=None, help="针对第二个网络的prefix / prefix for network2"
     )
     parser.add_argument(
-      "--pretrained_model_name_or_path_2", type=str, default=model_path_2,
+      "--pretrained_model_name_or_path_2", type=str, default=None,
       help="pretrained base model for network_2 to train, directory to Diffusers model or StableDiffusion checkpoint / 针对第二个网络的模型预加载位置"
     )
     # 为了不修改其他文件，就在这里加train_data_dir
     # In order to avoid modifying other files, add new parameters here for the second network:
     parser.add_argument(
-      "--train_data_dir_2", type=str, default=train_data_dir_2, help="directory for train images of network2 /  针对第二个网络的训练数据"
+      "--train_data_dir_2", type=str, default=None, help="directory for train images of network2 /  针对第二个网络的训练数据"
     )
     parser.add_argument(
-      "--reg_data_dir_2", type=str, default=reg_data_dir_2, help="directory for regularization images of network2 / 针对第二个网络的正则数据"
+      "--reg_data_dir_2", type=str, default=None, help="directory for regularization images of network2 / 针对第二个网络的正则数据"
     )
     # have no effect after experiments
     parser.add_argument(
