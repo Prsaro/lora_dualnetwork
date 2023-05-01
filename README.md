@@ -85,11 +85,12 @@ accelerate launch --num_cpu_threads_per_process 1 train_dualnetwork.py
 
 ## 
 Used the same prompt and fixed the seed, with the only difference being the addition of Hanfu lora model or not.
+checkpoint: [hanfu_nahida](https://civitai.com/models/55161/hanfunahidadualnetworktrain)
 
 <div align="center">
 <img src="img/nihada_base.png" width = "200" height =  alt="图片名称" align=center/><img src="img/nihida_hanfu.png" width = "200" height =  alt="图片名称" align=center/>
 </div>
-Can easily transform the clothes of nahida into hanfu. LoRA checkpoint: [nahida_hanfu](https://civitai.com/models/55161/hanfunahidadualnetworktrain)
+Can easily transform the clothes of nahida into hanfu.
 <div align="center">
 <img src="img/sangyan_base.jpeg" width = "200" height =  alt="图片名称" align=center/><img src="img/sangyan_hanfu.png" width = "200" height =  alt="图片名称" align=center/>
 </div>
