@@ -83,18 +83,21 @@ accelerate launch --num_cpu_threads_per_process 1 train_dualnetwork.py
     --half_annel_epoch=0
 ```
 
-## 
+## Demo & Checkpoints
 Used the same prompt and fixed the seed, with the only difference being the addition of Hanfu lora model or not.
-checkpoint: [hanfu_nahida](https://civitai.com/models/55161/hanfunahidadualnetworktrain)
-
+### Checkpoints: 
+We release the hanfu LoRA trained with Nahida LoRA.
+[hanfu_nahida](https://civitai.com/models/55161/hanfunahidadualnetworktrain)
+### Demo 
 <div align="center">
-<img src="img/nihada_base.png" width = "200" height =  alt="图片名称" align=center/><img src="img/nihida_hanfu.png" width = "200" height =  alt="图片名称" align=center/>
-</div>
-Can easily transform the clothes of nahida into hanfu.
-<div align="center">
-<img src="img/sangyan_base.jpeg" width = "200" height =  alt="图片名称" align=center/><img src="img/sangyan_hanfu.png" width = "200" height =  alt="图片名称" align=center/>
+<img src="img/nihida_base.png" width = "200" height =  alt="图片名称" align=center/><img src="img/nahida_common_loss.jpeg" width = "200" height =  alt="图片名称" align=center/><img src="img/nihida_hanfu.png" width = "200" height =  alt="图片名称" align=center/>
 </div>
 
+From left to right, the pictures are Nahida without LoRA, Nahida with hanfu LoRA trained with common loss, Nahida with hanfu LoRA trained with orthogonal loss. Can easily transform the clothes of Nahida into hanfu.
+<div align="center">
+<img src="img/sangyan_base.jpeg" width = "200" height =  alt="图片名称" align=center/><img src="img/sangyan_common_loss.jpeg" width = "200" height =  alt="图片名称" align=center/><img src="img/sangyan_hanfu.png" width = "200" height =  alt="图片名称" align=center/>
+</div>
+From left to right, the pictures are Sangyan without LoRA, Sangyan with hanfu LoRA trained with common loss, Sangyan with hanfu LoRA trained with orthogonal loss.
 Changed the character's clothing without affecting their appearance and movements.
 
 @ kkworld
