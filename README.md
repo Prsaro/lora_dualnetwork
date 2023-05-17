@@ -88,6 +88,8 @@ Used the same prompt and fixed the seed, with the only difference being the addi
 ### Checkpoints: 
 We release the hanfu LoRA trained with Nahida LoRA.
 [hanfu_nahida](https://civitai.com/models/55161/hanfunahidadualnetworktrain)
+We finetuned a LoRA from a popular [hanfu LoRA](https://civitai.com/models/8029/elegant-hanfu-ruqun-style) and uploaded it into civitai:[hanfu_ruqun](https://civitai.com/models/68524?modelVersionId=73210).
+
 ### Demo 
 <div align="center">
 <img src="img/nihida_base.png" width = "200" height =  alt="图片名称" align=center/><img src="img/nahida_common_loss.jpeg" width = "200" height =  alt="图片名称" align=center/><img src="img/nihida_hanfu.png" width = "200" height =  alt="图片名称" align=center/>
@@ -99,5 +101,10 @@ From left to right, the pictures are Nahida without LoRA, Nahida with hanfu LoRA
 </div>
 From left to right, the pictures are Sangyan without LoRA, Sangyan with hanfu LoRA trained with common loss, Sangyan with hanfu LoRA trained with orthogonal loss.
 Changed the character's clothing without affecting their appearance and movements.
+
+<div align="center">
+<img src="img/15736-2460371662-hanfu, (ru_qun), tree, pool, white hair, green eyes, nahida_genshin, child, masterpiece, best quality.png" width = "200" height =  alt="图片名称" align=center/><img src="img/15735-2460371662-hanfu, (ru_qun), tree, pool, white hair, green eyes, nahida_genshin, child, masterpiece, best quality.png" width = "200" height =  alt="图片名称" align=center/>
+</div>
+We finetuned a popular hanfu LoRA model in civitai to test effectiveness.The left one is before finetuned, and the right one is after finetuned(same seed and prompts).
 
 @ kkworld
