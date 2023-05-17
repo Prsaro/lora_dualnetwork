@@ -88,6 +88,7 @@ Used the same prompt and fixed the seed, with the only difference being the addi
 ### Checkpoints: 
 We release the hanfu LoRA trained with Nahida LoRA.
 [hanfu_nahida](https://civitai.com/models/55161/hanfunahidadualnetworktrain)
+
 We finetuned a LoRA from a popular [hanfu LoRA](https://civitai.com/models/8029/elegant-hanfu-ruqun-style) and uploaded it into civitai:[hanfu_ruqun](https://civitai.com/models/68524?modelVersionId=73210).
 
 ### Demo 
