@@ -317,7 +317,7 @@ def train(args):
   # if a new network is added in future, add if ~ then blocks for each network (;'∀')
   # 创建了两个lora / create two lora blocks
   network_1 = network_module.create_network(1.0, args.network_dim, args.network_alpha, vae_1, text_encoder_1, unet_1, **net_kwargs)
-  network_2 = network_module.create_network(1.0, args.network_dim, args.network_alpha, vae_1, text_encoder_2, unet_2, **net_kwargs)
+  network_2 = network_module.create_network(1.0, args.network_dim_2, args.network_alpha_2, vae_1, text_encoder_2, unet_2, **net_kwargs)
 
   if network_1 is None or network_2 is None:
     return
@@ -578,7 +578,7 @@ def train(args):
       "ss_lr_warmup_steps": args.lr_warmup_steps,
       "ss_lr_scheduler": args.lr_scheduler,
       "ss_network_module": args.network_module,
-      "ss_network_dim": args.network_dim,  # None means default because another network than LoRA may have another default dim
+      "ss_network_dim": args.network_dim_2,  # None means default because another network than LoRA may have another default dim
       "ss_network_alpha": args.network_alpha,  # some networks may not use this value
       "ss_mixed_precision": args.mixed_precision,
       "ss_full_fp16": bool(args.full_fp16),
@@ -1206,6 +1206,15 @@ def setup_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--network_alpha",
+        type=float,
+        default=64,
+        help="alpha for LoRA weight scaling, default 1 (same as network_dim for same behavior as old version) / LoRaの重み調整のalpha値、デフォルト1（旧バージョンと同じ動作をするにはnetwork_dimと同じ値を指定）",
+    )
+    parser.add_argument(
+        "--network_dim_2", type=int, default=64, help="network dimensions (depends on each network) / モジュールの次元数（ネットワークにより定義は異なります）"
+    )
+    parser.add_argument(
+        "--network_alpha_2",
         type=float,
         default=64,
         help="alpha for LoRA weight scaling, default 1 (same as network_dim for same behavior as old version) / LoRaの重み調整のalpha値、デフォルト1（旧バージョンと同じ動作をするにはnetwork_dimと同じ値を指定）",
