@@ -44,7 +44,7 @@ We added a new orthogonal loss to the original DDPM loss, as shown in the follow
 $$L = (\epsilon - \epsilon_\theta)^2 + \lambda (h_1h_2^T\bigodot(1-I))^2$$
 
 Here, h refers to the hidden layer of two independent LoRA networks that correspond to each other.
-![](/img/dualnetwork_theory.jpg)
+![](/img/dualnetwork_theory.png)
 We select the hidden layers from the output of text encoder and the mid-layer of Unet as our chosen hidden layers h. The influence of the mid-layer of Unet is more significant in this case.
 ![](/img/dualnetwork.jpg)
 
